@@ -339,8 +339,13 @@ func (fs *FileSet) getField(f *ast.Field) []gen.StructField {
 	if f.Tag != nil {
 		body := reflect.StructTag(strings.Trim(f.Tag.Value, "`")).Get("msg")
 		tags := strings.Split(body, ",")
-		if len(tags) == 2 && tags[1] == "extension" {
-			extension = true
+		for _, tag := range tags[1:] {
+			switch tag {
+			case "extension":
+				extension = true
+			case "omitempty":
+				sf[0].OmitEmpty = true
+			}
 		}
 		// ignore "-" fields
 		if tags[0] == "-" {
