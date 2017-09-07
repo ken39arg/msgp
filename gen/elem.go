@@ -421,7 +421,8 @@ func (s *Struct) Complexity() int {
 }
 
 func (s *Struct) NotEmptyTest() string {
-	return "e := " + s.TypeName() + "; " + s.Varname() + " != e"
+	// not support omitempty because is not supoorted by encoding/json too
+	return "true"
 }
 
 type StructField struct {
