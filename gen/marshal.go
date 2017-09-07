@@ -107,10 +107,16 @@ func (m *marshalGen) mapstruct(s *Struct) {
 		}
 		data = msgp.AppendString(nil, s.Fields[i].FieldTag)
 
+		if s.Fields[i].OmitEmpty {
+			m.p.printf("\nif %s {", s.Fields[i].FieldElem.NotEmptyTest())
+		}
 		m.p.printf("\n// string %q", s.Fields[i].FieldTag)
 		m.Fuse(data)
 
 		next(m, s.Fields[i].FieldElem)
+		if s.Fields[i].OmitEmpty {
+			m.p.print("\n}")
+		}
 	}
 }
 
