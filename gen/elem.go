@@ -180,6 +180,9 @@ type Elem interface {
 	// or equal to 1.)
 	Complexity() int
 
+	// NotEmptyTest returns condition what it is not empty value.
+	NotEmptyTest() string
+
 	hidden()
 }
 
@@ -232,6 +235,10 @@ func (a *Array) Copy() Elem {
 
 func (a *Array) Complexity() int { return 1 + a.Els.Complexity() }
 
+func (a *Array) NotEmptyTest() string {
+	return "len(" + a.Varname() + ") > 0"
+}
+
 // Map is a map[string]Elem
 type Map struct {
 	common
@@ -270,6 +277,10 @@ func (m *Map) Copy() Elem {
 
 func (m *Map) Complexity() int { return 2 + m.Value.Complexity() }
 
+func (m *Map) NotEmptyTest() string {
+	return "len(" + m.Varname() + ") > 0"
+}
+
 type Slice struct {
 	common
 	Index string
@@ -303,6 +314,10 @@ func (s *Slice) Copy() Elem {
 
 func (s *Slice) Complexity() int {
 	return 1 + s.Els.Complexity()
+}
+
+func (s *Slice) NotEmptyTest() string {
+	return "len(" + s.Varname() + ") > 0"
 }
 
 type Ptr struct {
@@ -359,6 +374,10 @@ func (s *Ptr) Needsinit() bool {
 	return true
 }
 
+func (s *Ptr) NotEmptyTest() string {
+	return s.Varname() + " != nil"
+}
+
 type Struct struct {
 	common
 	Fields  []StructField // field list
@@ -401,10 +420,15 @@ func (s *Struct) Complexity() int {
 	return c
 }
 
+func (s *Struct) NotEmptyTest() string {
+	return "e := " + s.TypeName() + "; " + s.Varname() + " != e"
+}
+
 type StructField struct {
 	FieldTag  string // the string inside the `msg:""` tag
 	FieldName string // the name of the struct field
 	FieldElem Elem   // the field type
+	OmitEmpty bool   // Omitting individual empty fields
 }
 
 type ShimMode int
@@ -545,6 +569,27 @@ func (s *BaseElem) Resolved() bool {
 		return ok
 	}
 	return true
+}
+
+func (s *BaseElem) NotEmptyTest() string {
+	switch s.Value {
+	case String:
+		return s.Varname() + ` != ""`
+	case Bytes:
+		return "len(" + s.Varname() + ") > 0"
+	case Float32, Float64, Complex64, Complex128, Uint, Uint8, Uint16, Uint32, Uint64, Byte, Int, Int8, Int16, Int32, Int64:
+		return s.Varname() + " != 0"
+	case Bool:
+		return s.Varname()
+	case Intf:
+		return s.Varname() + " != nil"
+	case Time:
+		return "!" + s.Varname() + ".IsZero()"
+	case Ext:
+		return s.Varname() + ".Len() > 0"
+	default:
+		return "true" // ignore omitempty if unsupported
+	}
 }
 
 func (k Primitive) String() string {
