@@ -111,10 +111,10 @@ func (e *encodeGen) structmap(s *Struct) {
 			return
 		}
 		data = msgp.AppendString(nil, s.Fields[i].FieldTag)
-		e.p.printf("\n// write %q", s.Fields[i].FieldTag)
 		if s.Fields[i].OmitEmpty {
 			e.p.printf("\nif %s {", s.Fields[i].FieldElem.NotEmptyTest())
 		}
+		e.p.printf("\n// write %q", s.Fields[i].FieldTag)
 		e.Fuse(data)
 		next(e, s.Fields[i].FieldElem)
 		if s.Fields[i].OmitEmpty {
